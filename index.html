@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>SPOT THE AI — Find the Deepfake</title>
+<meta name="description" content="One photo is the original. One was altered by AI. Find every change before the clock runs out.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔍</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="grain"></div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+
+<!-- ============ HEADER ============ -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark">◎</span>
+      <span class="brand-word">SPOT<span class="accent-dot">·</span>THE<span class="accent-dot">·</span>AI</span>
+    </div>
+    <div class="topbar-hud mono" id="topbarHud" hidden>
+      <span class="hud-chip">LVL <b id="hudLevel">1</b>/<span id="hudLevelMax">6</span></span>
+      <span class="hud-chip">FOUND <b id="hudFound">0</b>/<span id="hudFoundMax">5</span></span>
+      <span class="hud-chip timer" id="hudTimerChip">⏱ <b id="hudTimer">60</b>s</span>
+      <span class="hud-chip">SCORE <b id="hudScore">0</b></span>
+    </div>
+  </div>
+</header>
+
+<main id="app">
+
+  <!-- ============ SCREEN: MENU ============ -->
+  <section class="screen screen-menu" id="screenMenu">
+    <div class="sunburst" aria-hidden="true"></div>
+    <div class="menu-inner reveal in">
+      <p class="eyebrow">AI DEEPFAKE DETECTOR // v1.0</p>
+      <h1 class="hero-title">
+        <span class="glitch-title" data-text="SPOT THE AI">SPOT THE AI</span>
+      </h1>
+      <p class="hero-sub">Somewhere between these two photos, an AI quietly changed <b>5 things</b>. Same room, same light, same everything &mdash; except what it touched. Find every alteration before the clock hits zero.</p>
+
+      <div class="howto">
+        <div class="howto-card">
+          <span class="howto-icon">🖼</span>
+          <span class="howto-label">Compare</span>
+          <span class="howto-text">Two photos, side by side. One is the original.</span>
+        </div>
+        <div class="howto-card">
+          <span class="howto-icon">🎯</span>
+          <span class="howto-label">Click</span>
+          <span class="howto-text">Tap the spot where something looks off.</span>
+        </div>
+        <div class="howto-card">
+          <span class="howto-icon">⏱</span>
+          <span class="howto-label">Beat the clock</span>
+          <span class="howto-text">6 rounds. Timer gets tighter every round.</span>
+        </div>
+      </div>
+
+      <button class="pill pill-lg" id="btnStart">
+        <span>START SCAN</span>
+        <span class="arrow">→</span>
+      </button>
+
+      <div class="best-score mono" id="bestScoreRow" hidden>
+        BEST SCORE <b id="bestScoreVal">0</b>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN: GAME ============ -->
+  <section class="screen screen-game" id="screenGame" hidden>
+    <div class="round-banner mono reveal" id="roundBanner"></div>
+
+    <div class="compare-wrap">
+      <div class="photo-frame" id="frameA" data-panel="real">
+        <div class="frame-chip mono">ORIGINAL</div>
+        <div class="frame-corners"><i></i><i></i><i></i><i></i></div>
+        <div class="frame-img-wrap">
+          <img id="imgReal" class="frame-img" alt="Original photo" draggable="false">
+          <svg class="marker-layer" id="markersA" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+          <div class="click-flash" id="flashA"></div>
+        </div>
+      </div>
+
+      <div class="vs-divider mono" aria-hidden="true"><span>VS</span></div>
+
+      <div class="photo-frame" id="frameB" data-panel="fake">
+        <div class="frame-chip mono accent">AI EDIT</div>
+        <div class="frame-corners"><i></i><i></i><i></i><i></i></div>
+        <div class="frame-img-wrap">
+          <img id="imgFake" class="frame-img" alt="AI-altered photo" draggable="false">
+          <svg class="marker-layer" id="markersB" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+          <div class="click-flash" id="flashB"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="found-pips" id="foundPips"></div>
+  </section>
+
+  <!-- ============ OVERLAY: LEVEL RESULT ============ -->
+  <section class="overlay" id="overlayLevel" hidden>
+    <div class="overlay-card glass reveal">
+      <p class="eyebrow" id="levelResultEyebrow">ROUND CLEAR</p>
+      <h2 class="glitch-title" id="levelResultTitle" data-text="AI EXPOSED">AI EXPOSED</h2>
+      <div class="result-stats mono">
+        <div><span>Found</span><b id="statFound">5/5</b></div>
+        <div><span>Time bonus</span><b id="statTimeBonus">+0</b></div>
+        <div><span>Round score</span><b id="statRoundScore">+0</b></div>
+      </div>
+      <button class="pill pill-lg" id="btnNextLevel"><span>NEXT ROUND</span><span class="arrow">→</span></button>
+    </div>
+  </section>
+
+  <!-- ============ OVERLAY: TIME'S UP ============ -->
+  <section class="overlay" id="overlayTimeout" hidden>
+    <div class="overlay-card glass reveal">
+      <p class="eyebrow eyebrow-danger">SCAN FAILED</p>
+      <h2 class="glitch-title" data-text="TIME'S UP">TIME'S UP</h2>
+      <p class="overlay-copy" id="timeoutCopy">You spotted <b id="statFoundTimeout">0/5</b>. The rest are revealed below.</p>
+      <button class="pill pill-lg" id="btnRetryLevel"><span>RETRY ROUND</span><span class="arrow">↻</span></button>
+    </div>
+  </section>
+
+  <!-- ============ OVERLAY: FINAL RESULTS ============ -->
+  <section class="overlay" id="overlayFinal" hidden>
+    <div class="overlay-card glass reveal overlay-card-lg">
+      <p class="eyebrow">SCAN COMPLETE</p>
+      <h2 class="glitch-title" data-text="FINAL REPORT">FINAL REPORT</h2>
+      <div class="final-score mono">
+        <span>TOTAL SCORE</span>
+        <b id="finalScore">0</b>
+      </div>
+      <p class="new-best mono" id="newBestBadge" hidden>★ NEW BEST ★</p>
+      <div class="result-stats mono">
+        <div><span>Rounds cleared</span><b id="finalRounds">0/6</b></div>
+        <div><span>Total found</span><b id="finalFound">0/30</b></div>
+        <div><span>Wrong clicks</span><b id="finalMisses">0</b></div>
+      </div>
+      <button class="pill pill-lg" id="btnPlayAgain"><span>PLAY AGAIN</span><span class="arrow">↻</span></button>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer mono">
+  <span>SPOT THE AI</span><span class="dot">·</span><span>built by ANCHORPOINT DIGITAL</span>
+</footer>
+
+<audio id="sfxCorrect" src="public/sfx/correct.mp3" preload="auto"></audio>
+<audio id="sfxWrong" src="public/sfx/wrong.mp3" preload="auto"></audio>
+<audio id="sfxWin" src="public/sfx/win.mp3" preload="auto"></audio>
+
+<script src="js/levels.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
