@@ -189,19 +189,24 @@
     const rect = wrap.getBoundingClientRect();
     const p = distPct(rect, evt.clientX, evt.clientY);
 
-    // ignore clicks landing on an already-found spot (neutral, no penalty)
-    for(const idx of foundSet){
-      const spots = spotsOf(lvl.diffs[idx], panel);
-      if(spots.some(s => Math.hypot(p.x - s.x, p.y - s.y) <= s.r)) return;
-    }
-
-    // check unfound diffs
-    let hitIdx = -1;
+    // check unfound diffs first (closest match wins, so overlapping hit zones
+    // resolve to whichever diff the click is actually nearest to)
+    let hitIdx = -1, hitDist = Infinity;
     lvl.diffs.forEach((d, idx) => {
       if(foundSet.has(idx)) return;
-      const spots = spotsOf(d, panel);
-      if(spots.some(s => Math.hypot(p.x - s.x, p.y - s.y) <= s.r)) hitIdx = idx;
+      spotsOf(d, panel).forEach(s => {
+        const dist = Math.hypot(p.x - s.x, p.y - s.y);
+        if(dist <= s.r && dist < hitDist){ hitDist = dist; hitIdx = idx; }
+      });
     });
+
+    // no new hit: ignore clicks landing on an already-found spot (neutral, no penalty)
+    if(hitIdx < 0){
+      for(const idx of foundSet){
+        const spots = spotsOf(lvl.diffs[idx], panel);
+        if(spots.some(s => Math.hypot(p.x - s.x, p.y - s.y) <= s.r)) return;
+      }
+    }
 
     if(hitIdx >= 0){
       registerHit(hitIdx, wrap, p);
