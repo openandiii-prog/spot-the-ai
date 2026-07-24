@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=4">
+<link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
 
@@ -115,6 +115,7 @@
       <h2 class="glitch-title" id="levelResultTitle" data-text="AI EXPOSED">AI EXPOSED</h2>
       <div class="result-stats mono">
         <div><span>Found</span><b id="statFound">5/5</b></div>
+        <div><span>Real photo ID'd</span><b id="statGuess">—</b></div>
         <div><span>Time bonus</span><b id="statTimeBonus">+0</b></div>
         <div><span>Round score</span><b id="statRoundScore">+0</b></div>
       </div>
@@ -145,6 +146,7 @@
       <div class="result-stats mono">
         <div><span>Rounds cleared</span><b id="finalRounds">0/6</b></div>
         <div><span>Total found</span><b id="finalFound">0/30</b></div>
+        <div><span>AI detection rate</span><b id="finalGuess">0/6</b></div>
         <div><span>Wrong clicks</span><b id="finalMisses">0</b></div>
       </div>
       <button class="pill pill-lg" id="btnPlayAgain"><span>PLAY AGAIN</span><span class="arrow">↻</span></button>
@@ -161,7 +163,7 @@
 <audio id="sfxWrong" src="public/sfx/wrong.mp3" preload="auto"></audio>
 <audio id="sfxWin" src="public/sfx/win.mp3" preload="auto"></audio>
 
-<script src="js/levels.js?v=4"></script>
-<script src="js/game.js?v=4"></script>
+<script src="js/levels.js?v=5"></script>
+<script src="js/game.js?v=5"></script>
 </body>
 </html>

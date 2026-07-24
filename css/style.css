@@ -199,6 +199,16 @@ h1,h2{ font-family:var(--font-display); line-height:.95; letter-spacing:-.01em; 
 .photo-frame.shake{ animation:shakeFrame .35s var(--ease-soft); }
 @keyframes shakeFrame{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-5px);} 75%{transform:translateX(5px);} }
 
+.photo-frame.guess-mode{ cursor:pointer; animation:guessPulse 1.1s ease-in-out infinite; }
+.photo-frame.guess-mode .frame-img-wrap{ cursor:pointer; }
+@keyframes guessPulse{
+  0%,100%{ box-shadow:0 20px 60px rgba(0,0,0,.5), 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent); }
+  50%{ box-shadow:0 20px 60px rgba(0,0,0,.5), 0 0 0 3px color-mix(in srgb, var(--accent) 80%, transparent), 0 0 30px color-mix(in srgb, var(--accent) 40%, transparent); }
+}
+.photo-frame.frame-correct{ box-shadow:0 20px 60px rgba(0,0,0,.5), 0 0 0 3px var(--success), 0 0 40px color-mix(in srgb, var(--success) 55%, transparent); }
+.photo-frame.frame-wrong{ box-shadow:0 20px 60px rgba(0,0,0,.5), 0 0 0 3px var(--danger), 0 0 40px color-mix(in srgb, var(--danger) 55%, transparent); }
+@media (prefers-reduced-motion:reduce){ .photo-frame.guess-mode{ animation:none; box-shadow:0 20px 60px rgba(0,0,0,.5), 0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent); } }
+
 .found-pips{ display:flex; gap:8px; justify-content:center; margin-top:22px; }
 .pip{ width:14px; height:14px; border-radius:4px; border:1px solid var(--hair); background:var(--panel); transition:background .3s, border-color .3s, transform .3s; }
 .pip.filled{ background:var(--success); border-color:var(--success); box-shadow:0 0 10px color-mix(in srgb, var(--success) 60%, transparent); transform:scale(1.1); }

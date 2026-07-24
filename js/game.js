@@ -44,6 +44,11 @@
   let levelActive = false;
   let hintsLeft = 1;
   const HINT_COST = 8;
+  let leftKey = "real", rightKey = "fake"; // which data key is shown on which physical side this round
+  let awaitingRealGuess = false;
+  let totalGuessCorrect = 0;
+  let lastGuessCorrect = null;
+  const GUESS_BONUS = 250;
 
   function playSfx(el){
     try{ el.currentTime = 0; el.play().catch(()=>{}); }catch(e){}
@@ -72,7 +77,7 @@
 
   // ---------- level lifecycle ----------
   function startGame(){
-    levelIndex = 0; score = 0; totalMisses = 0; totalFoundAll = 0;
+    levelIndex = 0; score = 0; totalMisses = 0; totalFoundAll = 0; totalGuessCorrect = 0;
     hideAllOverlays();
     showScreen("game");
     loadLevel(levelIndex);
@@ -84,10 +89,21 @@
     foundSet = new Set();
     levelActive = true;
     hintsLeft = 1;
-    imgReal.src = lvl.real;
+    awaitingRealGuess = false;
+    lastGuessCorrect = null;
+    frameA.classList.remove("guess-mode", "frame-correct", "frame-wrong");
+    frameB.classList.remove("guess-mode", "frame-correct", "frame-wrong");
+
+    // randomize which physical side shows the real photo this round, so the
+    // final "which is real" call can't be pattern-matched by position
+    const swap = Math.random() < 0.5;
+    leftKey = swap ? "fake" : "real";
+    rightKey = swap ? "real" : "fake";
+    imgReal.src = lvl[leftKey];
     imgReal.alt = "Photo A: " + lvl.name;
-    imgFake.src = lvl.fake;
+    imgFake.src = lvl[rightKey];
     imgFake.alt = "Photo B: " + lvl.name;
+
     clearMarkers(markersA); clearMarkers(markersB);
     renderPips(lvl.diffs.length);
     updateHintUI();
@@ -204,8 +220,8 @@
     timeLeft = Math.max(1, timeLeft - HINT_COST);
     updateTimerUI();
     const d = lvl.diffs[targetIdx];
-    const marksA = spotsOf(d, "real").map(s => drawHintMarker(markersA, s.x, s.y));
-    const marksB = spotsOf(d, "fake").map(s => drawHintMarker(markersB, s.x, s.y));
+    const marksA = spotsOf(d, leftKey).map(s => drawHintMarker(markersA, s.x, s.y));
+    const marksB = spotsOf(d, rightKey).map(s => drawHintMarker(markersB, s.x, s.y));
     setTimeout(() => { marksA.forEach(m => m.remove()); marksB.forEach(m => m.remove()); }, 1800);
   }
 
@@ -217,7 +233,8 @@
     };
   }
 
-  function handlePanelClick(panel, wrap, svg, flashEl, frameEl, evt){
+  function handlePanelClick(panel, side, wrap, svg, flashEl, frameEl, evt){
+    if(awaitingRealGuess){ handleRealGuess(side); return; }
     if(!levelActive) return;
     const lvl = LEVELS[levelIndex];
     const rect = wrap.getBoundingClientRect();
@@ -253,8 +270,8 @@
     foundSet.add(idx);
     const lvl = LEVELS[levelIndex];
     const d = lvl.diffs[idx];
-    drawFoundMarkers(markersA, spotsOf(d, "real"));
-    drawFoundMarkers(markersB, spotsOf(d, "fake"));
+    drawFoundMarkers(markersA, spotsOf(d, leftKey));
+    drawFoundMarkers(markersB, spotsOf(d, rightKey));
     score += 100;
     totalFoundAll++;
     updateScoreHud();
@@ -267,8 +284,36 @@
     if(foundSet.size === lvl.diffs.length){
       levelActive = false;
       clearInterval(timerId);
-      setTimeout(levelComplete, 350);
+      setTimeout(startRealGuess, 350);
     }
+  }
+
+  // ---------- final call: which photo is real? ----------
+  function startRealGuess(){
+    awaitingRealGuess = true;
+    roundBanner.innerHTML = '<b>ALL 5 FOUND</b> &mdash; now tap the photo you think is REAL';
+    frameA.classList.add("guess-mode");
+    frameB.classList.add("guess-mode");
+  }
+
+  function handleRealGuess(side){
+    awaitingRealGuess = false;
+    frameA.classList.remove("guess-mode");
+    frameB.classList.remove("guess-mode");
+    const correctSide = leftKey === "real" ? "A" : "B";
+    const correct = side === correctSide;
+    lastGuessCorrect = correct;
+    if(correct){ score += GUESS_BONUS; totalGuessCorrect++; updateScoreHud(); }
+    const correctFrame = correctSide === "A" ? frameA : frameB;
+    const wrongFrame = correctSide === "A" ? frameB : frameA;
+    correctFrame.classList.add("frame-correct");
+    if(!correct) wrongFrame.classList.add("frame-wrong");
+    playSfx(correct ? sfxWin : sfxWrong);
+    setTimeout(() => {
+      correctFrame.classList.remove("frame-correct");
+      wrongFrame.classList.remove("frame-wrong");
+      levelComplete();
+    }, 1400);
   }
 
   function registerMiss(wrap, flashEl, frameEl, clickPt){
@@ -285,11 +330,14 @@
   function levelComplete(){
     const lvl = LEVELS[levelIndex];
     const timeBonus = timeLeft * 5;
+    const guessBonus = lastGuessCorrect ? GUESS_BONUS : 0;
     score += timeBonus;
     updateScoreHud();
     $("statFound").textContent = lvl.diffs.length + "/" + lvl.diffs.length;
+    $("statGuess").textContent = lastGuessCorrect ? ("✓ CORRECT (+" + GUESS_BONUS + ")") : "✗ MISSED";
+    $("statGuess").style.color = lastGuessCorrect ? "var(--success)" : "var(--danger)";
     $("statTimeBonus").textContent = "+" + timeBonus;
-    $("statRoundScore").textContent = "+" + (lvl.diffs.length * 100 + timeBonus);
+    $("statRoundScore").textContent = "+" + (lvl.diffs.length * 100 + guessBonus + timeBonus);
     $("levelResultEyebrow").textContent = (levelIndex === LEVELS.length - 1) ? "FINAL ROUND CLEAR" : "ROUND " + (levelIndex+1) + " CLEAR";
     btnNextLevel.querySelector("span").textContent = (levelIndex === LEVELS.length - 1) ? "SEE FINAL REPORT" : "NEXT ROUND";
     playSfx(sfxWin);
@@ -301,8 +349,8 @@
     const lvl = LEVELS[levelIndex];
     lvl.diffs.forEach((d, idx) => {
       if(foundSet.has(idx)) return;
-      drawMissedMarkers(markersA, spotsOf(d, "real"));
-      drawMissedMarkers(markersB, spotsOf(d, "fake"));
+      drawMissedMarkers(markersA, spotsOf(d, leftKey));
+      drawMissedMarkers(markersB, spotsOf(d, rightKey));
     });
     $("statFoundTimeout").textContent = foundSet.size + "/" + lvl.diffs.length;
     overlayTimeout.hidden = false;
@@ -330,6 +378,7 @@
     $("finalScore").textContent = Math.max(0, score);
     $("finalRounds").textContent = LEVELS.length + "/" + LEVELS.length;
     $("finalFound").textContent = totalFoundAll + "/" + totalDiffs;
+    $("finalGuess").textContent = totalGuessCorrect + "/" + LEVELS.length;
     $("finalMisses").textContent = totalMisses;
 
     const best = parseInt(localStorage.getItem(BEST_KEY) || "0", 10);
@@ -355,8 +404,8 @@
   btnHint.addEventListener("click", useHint);
   btnPlayAgain.addEventListener("click", playAgain);
 
-  wrapReal.addEventListener("click", (e) => handlePanelClick("real", wrapReal, markersA, flashA, frameA, e));
-  wrapFake.addEventListener("click", (e) => handlePanelClick("fake", wrapFake, markersB, flashB, frameB, e));
+  wrapReal.addEventListener("click", (e) => handlePanelClick(leftKey, "A", wrapReal, markersA, flashA, frameA, e));
+  wrapFake.addEventListener("click", (e) => handlePanelClick(rightKey, "B", wrapFake, markersB, flashB, frameB, e));
 
   initMenu();
   showScreen("menu");
