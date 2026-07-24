@@ -16,7 +16,7 @@
   const screenMenu = $("screenMenu"), screenGame = $("screenGame");
   const topbarHud = $("topbarHud");
   const btnStart = $("btnStart"), btnNextLevel = $("btnNextLevel"),
-        btnRetryLevel = $("btnRetryLevel"), btnPlayAgain = $("btnPlayAgain");
+        btnRetryLevel = $("btnRetryLevel"), btnPlayAgain = $("btnPlayAgain"), btnHint = $("btnHint");
   const overlayLevel = $("overlayLevel"), overlayTimeout = $("overlayTimeout"), overlayFinal = $("overlayFinal");
   const imgReal = $("imgReal"), imgFake = $("imgFake");
   const wrapReal = imgReal.closest(".frame-img-wrap"), wrapFake = imgFake.closest(".frame-img-wrap");
@@ -42,6 +42,8 @@
   let timeLeft = 0;
   let timerId = null;
   let levelActive = false;
+  let hintsLeft = 1;
+  const HINT_COST = 8;
 
   function playSfx(el){
     try{ el.currentTime = 0; el.play().catch(()=>{}); }catch(e){}
@@ -81,12 +83,14 @@
     if(!lvl){ finalResults(); return; }
     foundSet = new Set();
     levelActive = true;
+    hintsLeft = 1;
     imgReal.src = lvl.real;
-    imgReal.alt = "Original photo: " + lvl.name;
+    imgReal.alt = "Photo A: " + lvl.name;
     imgFake.src = lvl.fake;
-    imgFake.alt = "AI-altered photo: " + lvl.name;
+    imgFake.alt = "Photo B: " + lvl.name;
     clearMarkers(markersA); clearMarkers(markersB);
     renderPips(lvl.diffs.length);
+    updateHintUI();
     roundBanner.innerHTML = 'ROUND <b>' + (i+1) + '/' + LEVELS.length + '</b> &mdash; ' + lvl.name.toUpperCase();
     hudLevel.textContent = i+1;
     hudLevelMax.textContent = LEVELS.length;
@@ -174,6 +178,36 @@
 
   function updateFoundHud(n){ hudFound.textContent = n; }
   function updateScoreHud(){ hudScore.textContent = Math.max(0, score); }
+
+  function updateHintUI(){
+    btnHint.disabled = hintsLeft <= 0;
+    btnHint.querySelector("span").textContent = hintsLeft > 0 ? "💡 HINT" : "💡 USED";
+  }
+
+  function drawHintMarker(svg, x, y){
+    const g = document.createElementNS(SVG_NS, "g");
+    g.setAttribute("class", "marker-hint");
+    const c = document.createElementNS(SVG_NS, "circle");
+    c.setAttribute("cx", x); c.setAttribute("cy", y); c.setAttribute("r", 6);
+    g.appendChild(c);
+    svg.appendChild(g);
+    return g;
+  }
+
+  function useHint(){
+    if(!levelActive || hintsLeft <= 0) return;
+    const lvl = LEVELS[levelIndex];
+    const targetIdx = lvl.diffs.findIndex((d, idx) => !foundSet.has(idx));
+    if(targetIdx < 0) return;
+    hintsLeft--;
+    updateHintUI();
+    timeLeft = Math.max(1, timeLeft - HINT_COST);
+    updateTimerUI();
+    const d = lvl.diffs[targetIdx];
+    const marksA = spotsOf(d, "real").map(s => drawHintMarker(markersA, s.x, s.y));
+    const marksB = spotsOf(d, "fake").map(s => drawHintMarker(markersB, s.x, s.y));
+    setTimeout(() => { marksA.forEach(m => m.remove()); marksB.forEach(m => m.remove()); }, 1800);
+  }
 
   // ---------- click handling ----------
   function distPct(rect, clientX, clientY){
@@ -318,6 +352,7 @@
   btnStart.addEventListener("click", startGame);
   btnNextLevel.addEventListener("click", nextLevel);
   btnRetryLevel.addEventListener("click", retryLevel);
+  btnHint.addEventListener("click", useHint);
   btnPlayAgain.addEventListener("click", playAgain);
 
   wrapReal.addEventListener("click", (e) => handlePanelClick("real", wrapReal, markersA, flashA, frameA, e));

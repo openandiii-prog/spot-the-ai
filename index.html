@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=3">
+<link rel="stylesheet" href="css/style.css?v=4">
 </head>
 <body>
 
@@ -59,7 +59,7 @@
         <div class="howto-card">
           <span class="howto-icon">⏱</span>
           <span class="howto-label">Beat the clock</span>
-          <span class="howto-text">6 rounds. Timer gets tighter every round.</span>
+          <span class="howto-text">26 rounds. Timer gets tighter as you go.</span>
         </div>
       </div>
 
@@ -80,10 +80,10 @@
 
     <div class="compare-wrap">
       <div class="photo-frame" id="frameA" data-panel="real">
-        <div class="frame-chip mono">ORIGINAL</div>
+        <div class="frame-chip mono">PHOTO A</div>
         <div class="frame-corners"><i></i><i></i><i></i><i></i></div>
         <div class="frame-img-wrap">
-          <img id="imgReal" class="frame-img" alt="Original photo" draggable="false">
+          <img id="imgReal" class="frame-img" alt="Photo A" draggable="false">
           <svg class="marker-layer" id="markersA" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
           <div class="click-flash" id="flashA"></div>
         </div>
@@ -92,10 +92,10 @@
       <div class="vs-divider mono" aria-hidden="true"><span>VS</span></div>
 
       <div class="photo-frame" id="frameB" data-panel="fake">
-        <div class="frame-chip mono accent">AI EDIT</div>
+        <div class="frame-chip mono">PHOTO B</div>
         <div class="frame-corners"><i></i><i></i><i></i><i></i></div>
         <div class="frame-img-wrap">
-          <img id="imgFake" class="frame-img" alt="AI-altered photo" draggable="false">
+          <img id="imgFake" class="frame-img" alt="Photo B" draggable="false">
           <svg class="marker-layer" id="markersB" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
           <div class="click-flash" id="flashB"></div>
         </div>
@@ -103,6 +103,9 @@
     </div>
 
     <div class="found-pips" id="foundPips"></div>
+    <button class="pill ghost pill-hint" id="btnHint">
+      <span>💡 HINT</span><span class="mono" id="hintCost">(−8s)</span>
+    </button>
   </section>
 
   <!-- ============ OVERLAY: LEVEL RESULT ============ -->
@@ -158,7 +161,7 @@
 <audio id="sfxWrong" src="public/sfx/wrong.mp3" preload="auto"></audio>
 <audio id="sfxWin" src="public/sfx/win.mp3" preload="auto"></audio>
 
-<script src="js/levels.js?v=3"></script>
-<script src="js/game.js?v=3"></script>
+<script src="js/levels.js?v=4"></script>
+<script src="js/game.js?v=4"></script>
 </body>
 </html>
